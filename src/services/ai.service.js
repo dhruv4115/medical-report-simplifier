@@ -64,3 +64,47 @@ exports.normalizeTests = async (rawText) => {
   }
   
 };
+
+exports.generateSummary = async (normalizedTests) => {
+  const abnormalTests = normalizedTests.filter(t => t.status && t.status.toLowerCase() !== 'normal');
+
+  if (abnormalTests.length === 0) {
+    return {
+      summary: "All test results are within the normal range.",
+      explanations: []
+    };
+  }
+
+  console.log('Sending abnormal results to AI for summarization...');
+
+  const prompt = `
+    You are a helpful medical assistant who explains lab results in simple, non-alarming terms.
+    Based on the following abnormal lab results, generate a patient-friendly summary and a list of brief, general explanations for each finding.
+
+    Follow these rules strictly:
+    1.  **DO NOT provide a diagnosis, medical advice, or treatment recommendations.** This is critical.
+    2.  Keep the language simple and easy for a non-medical person to understand.
+    3.  Your response must be ONLY a JSON object with two keys: "summary" (a single string) and "explanations" (an array of strings).
+
+    Here are the abnormal results:
+    ${JSON.stringify(abnormalTests)}
+  `;
+
+  try {
+    const response = await axios.post(
+      GEMINI_API_URL,
+      { contents: [{ parts: [{ text: prompt }] }] },
+      { headers: { 'Content-Type': 'application/json' } }
+    );
+
+    const jsonString = response.data.candidates[0].content.parts[0].text
+      .replace(/```json/g, '').replace(/```/g, '').trim();
+      
+    console.log('AI summary generation successful.');
+    return JSON.parse(jsonString);
+
+  } catch (error) {
+    console.error('Error calling Gemini API for summarization:', error.response ? error.response.data : error.message);
+    throw new Error('Failed to generate summary with AI service.');
+  }
+};

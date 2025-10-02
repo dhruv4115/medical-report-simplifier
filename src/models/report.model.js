@@ -6,17 +6,17 @@ const reportSchema = new mongoose.Schema({
         required: true,
     },
     finalOutput: {
-        type: mongoose.Schema.Types.Mixed, // Stores the final JSON object
+        type: mongoose.Schema.Types.Mixed,
     },
     status: {
         type: String,
         enum: ['processed', 'unprocessed'],
         required: true,
     },
-    reason: { // Reason for unprocessed status
+    reason: {
         type: String,
     }
-}, { timestamps: true }); // Adds createdAt and updatedAt fields
+}, { timestamps: true });
 
 const Report = mongoose.model('Report', reportSchema);
 

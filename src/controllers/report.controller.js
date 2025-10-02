@@ -1,6 +1,7 @@
 const ocrService = require('../services/ocr.service');
 const aiService = require('../services/ai.service'); 
 const validationService = require('../services/validation.service'); 
+const Report = require('../models/report.model');
 
 exports.processReport = async (req, res) => {
   try {
@@ -27,16 +28,24 @@ exports.processReport = async (req, res) => {
 
     const isValid = validationService.validateTests(rawText, normalizedData.tests);
     if (!isValid) {
-      return res.status(400).json({
-        status: "unprocessed",
-        reason: "hallucinated tests not present in input"
-      });
+      await Report.create({ rawText, status: 'unprocessed', reason: 'Hallucinated tests' });
+      return res.status(400).json({ status: "unprocessed", reason: "hallucinated tests not present in input" });
     }
 
-    res.status(200).json({
-      message: 'Step 2 (AI Normalization) completed and Validation completed.',
-      normalizedData: normalizedData
-    });
+    // --- STEP 3: Patient-Friendly Summary ---
+    const summaryData = await aiService.generateSummary(normalizedData.tests);
+
+    // --- STEP 4: Final Output ---
+    const finalOutput = {
+      tests: normalizedData.tests,
+      summary: summaryData.summary,
+      explanations: summaryData.explanations,
+      status: "ok"
+    };
+
+    await Report.create({ rawText, finalOutput, status: 'processed' });
+
+    res.status(200).json(finalOutput);
 
   } catch (error) {
     console.error('Error in processReport controller:', error);
