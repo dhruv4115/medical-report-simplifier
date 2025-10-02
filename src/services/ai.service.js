@@ -62,4 +62,5 @@ exports.normalizeTests = async (rawText) => {
     console.error('Error calling Gemini API:', error.response ? error.response.data : error.message);
     throw new Error('Failed to normalize data with AI service.');
   }
+  
 };

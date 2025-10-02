@@ -1,5 +1,6 @@
 const ocrService = require('../services/ocr.service');
 const aiService = require('../services/ai.service'); 
+const validationService = require('../services/validation.service'); 
 
 exports.processReport = async (req, res) => {
   try {
@@ -24,8 +25,16 @@ exports.processReport = async (req, res) => {
     // --- STEP 2: Normalize Tests JSON using AI ---
     const normalizedData = await aiService.normalizeTests(rawText);
 
+    const isValid = validationService.validateTests(rawText, normalizedData.tests);
+    if (!isValid) {
+      return res.status(400).json({
+        status: "unprocessed",
+        reason: "hallucinated tests not present in input"
+      });
+    }
+
     res.status(200).json({
-      message: 'Step 2 (AI Normalization) completed.',
+      message: 'Step 2 (AI Normalization) completed and Validation completed.',
       normalizedData: normalizedData
     });
 
