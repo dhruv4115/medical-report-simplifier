@@ -1,16 +1,10 @@
 const axios = require('axios');
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-// This is the new, correct line
 const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
 
 
 
-/**
- * Sends raw medical text to the Gemini API for normalization into JSON.
- * @param {string} rawText The raw text extracted from the medical report.
- * @returns {Promise<object>} A promise that resolves to the structured JSON from the AI.
- */
 exports.normalizeTests = async (rawText) => {
   console.log('Sending text to AI for normalization...');
 

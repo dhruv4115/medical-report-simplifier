@@ -34,7 +34,7 @@ The application follows a standard Node.js service architecture:
 * **Backend**: Node.js, Express.js
 * **Database**: MongoDB with Mongoose
 * **OCR**: Tesseract.js
-* **AI**: Google Gemini 2.0 Flash API
+* **AI**: Google Gemini Flash API
 * **File Handling**: Multer
 * **Environment**: dotenv
 
@@ -93,28 +93,6 @@ The API has a single endpoint for processing reports.
 
 `POST /api/process-report`
 
-### 1. Submit Raw Text
-
-Send a JSON payload with a `text` key.
-
-**cURL Example:**
-```bash
-curl -X POST -H "Content-Type: application/json" \
--d '{
-  "text": "Hemoglobin 10.2 g/dL (Low), WBC 11,200 /uL (High)"
-}' \
-http://localhost:3000/api/process-report
-```
-
-### 2. Submit an Image
-
-Send a `multipart/form-data` request with an `image` key.
-
-**cURL Example:**
-```bash
-curl -X POST -F "image=@/path/to/your/report.png" http://localhost:3000/api/process-report
-```
-
 ### Success Response (`200 OK`)
 
 ```json
@@ -150,3 +128,54 @@ curl -X POST -F "image=@/path/to/your/report.png" http://localhost:3000/api/proc
     "reason": "hallucinated tests not present in input"
 }
 ```
+
+---
+
+## 📸 Screenshots
+
+### Text Input Demo
+
+![Text Input Demo](./screenshots/text-input-demo.png)
+
+### Image Input Demo
+
+![Image Input Demo](./screenshots/image-input-demo.png)
+
+---
+
+## 🤖 Prompts Used
+
+### 1. Normalization Prompt
+
+> You are an expert medical data extraction bot. Your task is to analyze the following medical report text and convert it into a structured JSON object.
+>
+> Follow these rules strictly:
+> 1. Extract all medical tests mentioned.
+> 2. For each test, identify the "name", "value" (as a number), "unit", and "status" (e.g., "Low", "High", or "Normal" if indicated).
+> 3. If reference ranges are provided, include them in a "ref_range" object with "low" and "high" keys.
+> 4. Your response MUST BE ONLY the JSON object, with no extra text, explanations, or markdown formatting.
+> 5. Do NOT invent or hallucinate any tests or values not present in the text.
+>
+> The final JSON must follow this exact schema:
+> {
+>   "tests": [
+>     {
+>       "name": "string",
+>       "value": number,
+>       "unit": "string",
+>       "status": "string",
+>       "ref_range": { "low": number, "high": number }
+>     }
+>   ],
+>   "normalization_confidence": number (a value between 0 and 1)
+> }
+
+### 2. Summarization Prompt
+
+> You are a helpful medical assistant who explains lab results in simple, non-alarming terms.
+> Based on the following abnormal lab results, generate a patient-friendly summary and a list of brief, general explanations for each finding.
+>
+> Follow these rules strictly:
+> 1. **DO NOT provide a diagnosis, medical advice, or treatment recommendations.** This is critical.
+> 2. Keep the language simple and easy for a non-medical person to understand.
+> 3. Your response must be ONLY a JSON object with two keys: "summary" (a single string) and "explanations" (an array of strings).

@@ -1,11 +1,5 @@
 const Tesseract = require('tesseract.js');
 
-/**
- * Extracts text from an image buffer using Tesseract.js.
- * @param {Buffer} imageBuffer The image file buffer.
- * @returns {Promise<object>} A promise that resolves to an object 
- * containing the extracted text and confidence score.
- */
 exports.extractTextFromImage = async (imageBuffer) => {
   console.log('Starting OCR process...');
   try {
